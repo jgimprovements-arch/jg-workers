@@ -1,0 +1,7 @@
+# packet-merge/wrangler.toml
+name = "jg-packet-merge"
+main = "src/index.js"
+compatibility_date = "2025-09-15"
+compatibility_flags = ["nodejs_compat"]
+
+workers_dev = true

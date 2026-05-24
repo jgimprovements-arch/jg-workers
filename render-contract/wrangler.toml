@@ -1,0 +1,10 @@
+# render-contract/wrangler.toml
+name = "jg-render-contract"
+main = "src/index.js"
+compatibility_date = "2025-09-15"
+compatibility_flags = ["nodejs_compat"]
+
+# Browser Rendering binding — accessed as env.BROWSER inside the worker.
+browser = { binding = "BROWSER" }
+
+workers_dev = true

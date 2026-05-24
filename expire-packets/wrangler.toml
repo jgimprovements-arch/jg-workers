@@ -1,0 +1,11 @@
+# expire-packets/wrangler.toml
+name = "jg-expire-packets"
+main = "src/index.js"
+compatibility_date = "2025-09-15"
+compatibility_flags = ["nodejs_compat"]
+
+# Daily 09:00 UTC = 04:00 Central Standard / 05:00 Central Daylight.
+[triggers]
+crons = ["0 9 * * *"]
+
+workers_dev = true
