@@ -19,7 +19,9 @@
 // ─── Env vars (set as Worker secrets) ─────────────────────────────────────
 // SUPABASE_URL
 // SUPABASE_SERVICE_ROLE_KEY
-// ALBI_API_KEY        — required; the worker refuses to run without it
+// ALBI_KEY            — required; the worker refuses to run without it.
+//                       Named ALBI_KEY (not ALBI_API_KEY) to match the
+//                       existing Cloudflare secret deployed for this worker.
 // CRON_SECRET         — for manual HTTP triggering
 //
 // ─── Notes on the Albi port (May 2026) ────────────────────────────────────
@@ -27,7 +29,7 @@
 // Cloudflare Albi proxy migration (jg-albi-proxy, 2026-05-22), Albi now
 // lives at api.albiware.com/v5/Integrations/Projects and authenticates with
 // the `ApiKey` header (NOT Bearer). This worker uses the new URL+auth
-// directly with its own copy of ALBI_API_KEY rather than routing through
+// directly with its own copy of ALBI_KEY rather than routing through
 // jg-albi-proxy — keeping it independent so an Albi-side issue can't take
 // down dispatch.
 
@@ -68,7 +70,7 @@ async function findAlbiProject(env, projectName, log) {
     const url = `https://api.albiware.com/v5/Integrations/Projects?pageSize=50&page=${p}`;
     const r = await fetch(url, {
       headers: {
-        ApiKey: env.ALBI_API_KEY,
+        ApiKey: env.ALBI_KEY,
         Accept: 'application/json',
       },
     });
@@ -150,7 +152,7 @@ async function runEnrichment(env) {
   const log = { started_at: startedAt, steps: [], errors: [] };
 
   // Env check
-  const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ALBI_API_KEY'];
+  const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ALBI_KEY'];
   const missing = required.filter(k => !env[k]);
   if (missing.length) {
     log.errors.push({ step: 'config', missing });
