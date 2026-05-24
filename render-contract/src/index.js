@@ -76,8 +76,13 @@ const FIELD_IDS = [
   'commencement_date', 'completion_date',
   'cancellation_contract_date', 'guaranty_contract_date', 'guaranty_project_site',
   'other_incorporated_docs',
-  'sov_project_ref', 'sov_contract_price', 'sov_source_estimate', 'sov_version_date',
-  'sov_subtotal', 'sov_tax', 'sov_overhead', 'sov_profit', 'sov_exclusions',
+  // Exhibit A — Scope of Work wrapper. Phase table removed; we now reference
+  // the attached Xactimate by name. Overhead/Profit fields removed too since
+  // they were always 0 for stripped-down Xact exports anyway.
+  'sov_project_ref', 'sov_contract_price', 'sov_source_estimate',
+  'sov_source_estimate_ref',  // mirror of sov_source_estimate, used in callout
+  'sov_version_date',
+  'sov_subtotal', 'sov_tax', 'sov_exclusions',
 ];
 
 export default {
@@ -122,14 +127,20 @@ export default {
       // (Georgia, Helvetica Neue, Times, Arial), no external network calls.
       await page.setContent(CONTRACT_TEMPLATE_HTML, { waitUntil: 'load' });
 
-      // Inject all 27 fields + draws table in page context.
+      // Inject fields + draws table in page context.
+      // NOTE: SOV phase table was removed from the template — Exhibit A now
+      // references the attached Xactimate by name instead of duplicating
+      // its line items. The xact_items payload field is no longer used.
       await page.evaluate(({ fields, draws, fieldIds }) => {
+        // 1) Field text injection.
         for (const id of fieldIds) {
           const el = document.getElementById(id);
           if (!el) continue;
           const value = fields[id];
           el.textContent = (value === null || value === undefined) ? '' : String(value);
         }
+
+        // 2) Draw schedule table — still in main contract body.
         const tbody = document.getElementById('draw_table_body');
         if (tbody && Array.isArray(draws)) {
           tbody.innerHTML = '';
@@ -149,7 +160,6 @@ export default {
             tbody.appendChild(tr);
           }
         }
-        // sov_phase_table_body intentionally not populated — deferred per original spec.
       }, { fields, draws, fieldIds: FIELD_IDS });
 
       const pdfBuffer = await page.pdf({
