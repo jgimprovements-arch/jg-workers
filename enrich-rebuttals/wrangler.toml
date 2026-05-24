@@ -1,0 +1,12 @@
+# enrich-rebuttals/wrangler.toml
+name = "jg-enrich-rebuttals"
+main = "src/index.js"
+compatibility_date = "2025-09-15"
+compatibility_flags = ["nodejs_compat"]
+
+# Daily 08:00 UTC = 03:00 Central CDT / 02:00 Central CST.
+# Same schedule as the original Vercel cron.
+[triggers]
+crons = ["0 8 * * *"]
+
+workers_dev = true
