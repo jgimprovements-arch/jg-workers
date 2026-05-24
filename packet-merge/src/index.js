@@ -74,16 +74,23 @@ async function mergePdfs(contractBytes, sovBytes, xactBytes) {
   merged.setCreator('jg-workers/packet-merge');
   merged.setCreationDate(new Date());
 
-  // Order: Contract (legal terms) → SOV (scope + draws) → Xact (line detail).
+  // Order: Contract (legal terms — includes inline draw schedule) → SOV
+  // standalone (optional — historically appended; now skippable since the
+  // contract itself contains the SOV draw table) → Xact (line detail).
+  // Pass sovBytes = null to skip the standalone SOV page entirely.
   const sources = [
-    { bytes: contractBytes, label: 'Contract' },
-    { bytes: sovBytes,      label: 'SOV' },
-    { bytes: xactBytes,     label: 'Xactimate' },
+    { bytes: contractBytes, label: 'Contract', required: true  },
+    { bytes: sovBytes,      label: 'SOV',      required: false },
+    { bytes: xactBytes,     label: 'Xactimate', required: true },
   ];
 
   for (const src of sources) {
+    // Skip optional sources when the caller passed null/empty.
     if (!src.bytes || src.bytes.length === 0) {
-      throw new Error(`Empty PDF: ${src.label}`);
+      if (src.required) {
+        throw new Error(`Empty PDF: ${src.label}`);
+      }
+      continue;
     }
     let doc;
     try {
@@ -122,10 +129,12 @@ export default {
     if (!packet_id || !project_id) {
       return jsonResponse(request, { ok: false, error: 'packet_id and project_id required' }, 400);
     }
-    if (!xact_pdf_url || !sov_pdf_url || !contract_pdf_url) {
+    // contract_pdf_url and xact_pdf_url are required; sov_pdf_url is optional
+    // (the contract template already includes the SOV draw schedule inline).
+    if (!xact_pdf_url || !contract_pdf_url) {
       return jsonResponse(request, {
         ok: false,
-        error: 'xact_pdf_url, sov_pdf_url, contract_pdf_url all required',
+        error: 'xact_pdf_url and contract_pdf_url required',
       }, 400);
     }
     if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -133,10 +142,11 @@ export default {
     }
 
     try {
-      const [contractBytes, sovBytes, xactBytes] = await Promise.all([
+      // Fetch the two required PDFs in parallel; SOV only if URL provided.
+      const [contractBytes, xactBytes, sovBytes] = await Promise.all([
         fetchPdfBytes(contract_pdf_url),
-        fetchPdfBytes(sov_pdf_url),
         fetchPdfBytes(xact_pdf_url),
+        sov_pdf_url ? fetchPdfBytes(sov_pdf_url) : Promise.resolve(null),
       ]);
 
       const { bytes, pageCount } = await mergePdfs(contractBytes, sovBytes, xactBytes);
