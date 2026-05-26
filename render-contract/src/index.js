@@ -348,7 +348,8 @@ export default {
             dateText.style.fontSize = '10pt';
             dateText.style.fontWeight = '600';
             dateText.style.color = '#0d2d5e';  // navy, matches contract palette
-            dateText.style.paddingBottom = '2pt';
+            dateText.style.paddingBottom = '0';
+            dateText.style.marginBottom = '-4pt';  // pull date down onto the line
             dateText.style.textAlign = 'left';
             line.parentNode.insertBefore(dateText, line);
           };
