@@ -298,15 +298,18 @@ export default {
             if (!line || !label) return;
 
             // Insert <img> above the underline. Inline styles only — avoids
-            // depending on additional CSS in the template.
+            // depending on additional CSS in the template. marginBottom uses
+            // a larger negative value so the sig sits ON the line (visually
+            // consistent with stampDate, which puts text right on the line)
+            // rather than floating above with a gap.
             const img = document.createElement('img');
             img.src = sigDataUrl;
             img.style.display = 'block';
-            img.style.maxHeight = '36pt';
+            img.style.maxHeight = '32pt';
             img.style.maxWidth = '100%';
             img.style.objectFit = 'contain';
             img.style.objectPosition = 'left bottom';
-            img.style.marginBottom = '-4pt';  // overlap the line slightly so sig sits "on" it
+            img.style.marginBottom = '-14pt';  // pull sig down onto the line
             line.parentNode.insertBefore(img, line);
 
             // Replace the label with printed name + date (smaller, on two lines).
