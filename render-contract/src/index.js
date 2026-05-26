@@ -309,7 +309,7 @@ export default {
             img.style.maxWidth = '100%';
             img.style.objectFit = 'contain';
             img.style.objectPosition = 'left bottom';
-            img.style.marginBottom = '-14pt';  // pull sig down onto the line
+            img.style.marginBottom = '-24pt';  // pull sig down onto the line
             line.parentNode.insertBefore(img, line);
 
             // Replace the label with printed name + date (smaller, on two lines).
