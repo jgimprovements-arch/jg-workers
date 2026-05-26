@@ -54,8 +54,9 @@ body {
 .co-header {
   background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 55%, var(--navy-light) 100%);
   color: white;
-  padding: 28pt 32pt;
-  margin: -0.75in -0.7in 24pt -0.7in;
+  padding: 24pt 28pt;
+  margin: 0 0 24pt 0;
+  border-radius: 4pt;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
