@@ -335,6 +335,7 @@ export default {
 
       } else {
         // ─── Contract field injection (existing logic) ──────────────────
+      await page.evaluate(({ fields, draws, fieldIds, xactItems, sigs, jgSig }) => {
         // 1) Field text injection.
         for (const id of fieldIds) {
           const el = document.getElementById(id);
