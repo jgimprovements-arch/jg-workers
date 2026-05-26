@@ -11,6 +11,7 @@
 
 import puppeteer from '@cloudflare/puppeteer';
 import { CONTRACT_TEMPLATE_HTML } from './template.js';
+import { CO_TEMPLATE_HTML } from './co-template.js';
 
 // ─── CORS (inlined) ──────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
@@ -118,15 +119,25 @@ export default {
       return jsonResponse(request, { ok: false, error: 'Invalid JSON body' }, 400);
     }
 
-    const { packet_id, project_id, fields, draws, xact_items, signatures } = body || {};
+    const { packet_id, project_id, fields, draws, xact_items, signatures, type, co_fields, co_items } = body || {};
+    const renderType = type || 'contract';  // 'contract' (default) or 'change_order'
+
     if (!packet_id || !project_id) {
       return jsonResponse(request, { ok: false, error: 'packet_id and project_id required' }, 400);
     }
-    if (!fields || typeof fields !== 'object') {
-      return jsonResponse(request, { ok: false, error: 'fields object required' }, 400);
-    }
-    if (!Array.isArray(draws)) {
-      return jsonResponse(request, { ok: false, error: 'draws array required' }, 400);
+
+    // Validation differs by render type.
+    if (renderType === 'change_order') {
+      if (!co_fields || typeof co_fields !== 'object') {
+        return jsonResponse(request, { ok: false, error: 'co_fields object required for change_order type' }, 400);
+      }
+    } else {
+      if (!fields || typeof fields !== 'object') {
+        return jsonResponse(request, { ok: false, error: 'fields object required' }, 400);
+      }
+      if (!Array.isArray(draws)) {
+        return jsonResponse(request, { ok: false, error: 'draws array required' }, 400);
+      }
     }
     // xact_items is optional — if absent or empty, the SOV phase table is
     // hidden rather than rendered with empty rows.
@@ -174,10 +185,156 @@ export default {
 
       // Load template HTML directly — fonts are all system fonts
       // (Georgia, Helvetica Neue, Times, Arial), no external network calls.
-      await page.setContent(CONTRACT_TEMPLATE_HTML, { waitUntil: 'load' });
+      const templateHtml = renderType === 'change_order' ? CO_TEMPLATE_HTML : CONTRACT_TEMPLATE_HTML;
+      await page.setContent(templateHtml, { waitUntil: 'load' });
 
-      // Inject fields + draws table + Xact line items in page context.
-      await page.evaluate(({ fields, draws, fieldIds, xactItems, sigs, jgSig }) => {
+      if (renderType === 'change_order') {
+        // ─── CO field injection ─────────────────────────────────────────
+        await page.evaluate(({ co_fields, co_items, sigs, jgSig }) => {
+          // 1) Inject CO text fields by ID.
+          const CO_FIELD_IDS = [
+            'co_title', 'co_project_ref', 'co_date',
+            'co_original_contract_date', 'co_owner_name', 'co_project_address',
+            'co_original_total', 'co_delta_amount', 'co_delta_label', 'co_new_total',
+            'co_schedule_impact',
+          ];
+          for (const id of CO_FIELD_IDS) {
+            const el = document.getElementById(id);
+            if (!el) continue;
+            const value = co_fields[id];
+            if (value !== null && value !== undefined) {
+              if (id === 'co_delta_amount' || id === 'co_new_total' || id === 'co_original_total') {
+                el.textContent = String(value);
+              } else {
+                el.textContent = String(value);
+              }
+            }
+          }
+
+          // 2) Build CO line items table.
+          const tbody = document.getElementById('co_line_items_body');
+          if (tbody && Array.isArray(co_items)) {
+            const usd = (n) => {
+              const v = Number(n) || 0;
+              return v.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            };
+            const titleCase = (s) => (s || '')
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, c => c.toUpperCase());
+
+            tbody.innerHTML = '';
+            for (const item of co_items) {
+              const tr = document.createElement('tr');
+              const delta = (Number(item.new_amount) || 0) - (Number(item.original_amount) || 0);
+
+              const descTd = document.createElement('td');
+              descTd.textContent = item.description || '';
+              if (item.is_new) {
+                const badge = document.createElement('span');
+                badge.className = 'new-badge';
+                badge.textContent = 'NEW';
+                descTd.appendChild(badge);
+              }
+              tr.appendChild(descTd);
+
+              const tradeTd = document.createElement('td');
+              tradeTd.textContent = titleCase(item.trade_category || 'general');
+              tr.appendChild(tradeTd);
+
+              const origTd = document.createElement('td');
+              origTd.className = 'r';
+              origTd.textContent = item.is_new ? '—' : usd(item.original_amount);
+              tr.appendChild(origTd);
+
+              const newTd = document.createElement('td');
+              newTd.className = 'r';
+              newTd.textContent = usd(item.new_amount);
+              tr.appendChild(newTd);
+
+              const deltaTd = document.createElement('td');
+              deltaTd.className = 'r';
+              deltaTd.style.color = delta >= 0 ? '#16A34A' : '#DC2626';
+              deltaTd.style.fontWeight = '700';
+              deltaTd.textContent = (delta >= 0 ? '+' : '') + usd(delta);
+              tr.appendChild(deltaTd);
+
+              tbody.appendChild(tr);
+            }
+          }
+
+          // 3) Signature stamping — identical logic to contract template.
+          //    Reuses the same data-sig-role anchor system.
+          if (sigs) {
+            const stampSig = (el, sigDataUrl, printedName, signedAt) => {
+              const line = el.querySelector('.sig-field-line');
+              const label = el.querySelector('.sig-field-label');
+              if (!line || !label) return;
+              const img = document.createElement('img');
+              img.src = sigDataUrl;
+              img.style.display = 'block';
+              img.style.maxHeight = '32pt';
+              img.style.maxWidth = '100%';
+              img.style.objectFit = 'contain';
+              img.style.objectPosition = 'left bottom';
+              img.style.marginBottom = '-24pt';
+              line.parentNode.insertBefore(img, line);
+              if (printedName || signedAt) {
+                const meta = document.createElement('div');
+                meta.style.fontFamily = "'Helvetica Neue', sans-serif";
+                meta.style.fontSize = '7.5pt';
+                meta.style.color = '#6B7280';
+                meta.style.marginTop = '2pt';
+                meta.style.letterSpacing = '0.04em';
+                meta.style.textTransform = 'uppercase';
+                const parts = [];
+                if (printedName) parts.push(printedName);
+                if (signedAt) parts.push('Signed ' + signedAt);
+                meta.textContent = parts.join(' · ');
+                const parent = label.parentNode;
+                parent.insertBefore(meta, label.nextSibling);
+              }
+            };
+
+            const stampDate = (el, signedAt) => {
+              const line = el.querySelector('.sig-field-line');
+              if (!line || !signedAt) return;
+              const dateText = document.createElement('div');
+              dateText.textContent = signedAt;
+              dateText.style.fontFamily = "'Helvetica Neue', sans-serif";
+              dateText.style.fontSize = '10pt';
+              dateText.style.fontWeight = '600';
+              dateText.style.color = '#0d2d5e';
+              dateText.style.paddingBottom = '0';
+              dateText.style.marginBottom = '-4pt';
+              dateText.style.textAlign = 'left';
+              line.parentNode.insertBefore(dateText, line);
+            };
+
+            const anchors = document.querySelectorAll('[data-sig-role]');
+            for (const el of anchors) {
+              const role = el.getAttribute('data-sig-role');
+              switch (role) {
+                case 'contractor':
+                  stampSig(el, jgSig, 'Joshua J. Greil', sigs.signed_at);
+                  break;
+                case 'customer':
+                  stampSig(el, sigs.customer_sig_data_url, sigs.customer_name, sigs.signed_at);
+                  break;
+                case 'customer-joint':
+                  if (sigs.customer_joint_sig_data_url) {
+                    stampSig(el, sigs.customer_joint_sig_data_url, sigs.customer_joint_name, sigs.signed_at);
+                  }
+                  break;
+                case 'date':
+                  stampDate(el, sigs.signed_at);
+                  break;
+              }
+            }
+          }
+        }, { co_fields, co_items: Array.isArray(co_items) ? co_items : [], sigs, jgSig: JG_SIG_DATA_URL });
+
+      } else {
+        // ─── Contract field injection (existing logic) ──────────────────
         // 1) Field text injection.
         for (const id of fieldIds) {
           const el = document.getElementById(id);
@@ -387,6 +544,7 @@ export default {
           }
         }
       }, { fields, draws, fieldIds: FIELD_IDS, xactItems, sigs, jgSig: JG_SIG_DATA_URL });
+      } // end else (contract path)
 
       const pdfBuffer = await page.pdf({
         format: 'Letter',
@@ -396,13 +554,13 @@ export default {
 
       // Deterministic storage path. Pre-sign and post-sign renders go to
       // distinct paths so we preserve both for diligence:
-      //   contract-{packet_id}.pdf         — unsigned, what we sent
-      //   contract-{packet_id}-signed.pdf  — fully executed (JG + customer)
-      // Re-issues use new packet_id → new path, never overwrites a sent/
-      // locked packet's contract. x-upsert: false in uploadPdfToStorage()
-      // would 409 on collision; the suffix prevents that case entirely.
+      //   contract-{packet_id}.pdf         — unsigned contract
+      //   contract-{packet_id}-signed.pdf  — fully executed contract
+      //   co-{packet_id}.pdf               — unsigned change order
+      //   co-{packet_id}-signed.pdf        — fully executed change order
+      const prefix = renderType === 'change_order' ? 'co' : 'contract';
       const suffix = sigs ? '-signed' : '';
-      const storagePath = `projects/${project_id}/contracts/contract-${packet_id}${suffix}.pdf`;
+      const storagePath = `projects/${project_id}/contracts/${prefix}-${packet_id}${suffix}.pdf`;
       const contract_pdf_url = await uploadPdfToStorage(env, storagePath, pdfBuffer);
 
       return jsonResponse(request, {
