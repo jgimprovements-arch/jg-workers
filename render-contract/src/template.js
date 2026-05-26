@@ -1059,7 +1059,7 @@ p { margin-bottom: 8pt; }
           <div class="sig-field-line"></div>
           <div class="sig-field-label">Title</div>
         </div>
-        <div class="sig-field narrow">
+        <div class="sig-field narrow" data-sig-role="date">
           <div class="sig-field-line"></div>
           <div class="sig-field-label">Date</div>
         </div>
@@ -1077,7 +1077,7 @@ p { margin-bottom: 8pt; }
           <div class="sig-field-line"></div>
           <div class="sig-field-label">Printed Name</div>
         </div>
-        <div class="sig-field narrow">
+        <div class="sig-field narrow" data-sig-role="date">
           <div class="sig-field-line"></div>
           <div class="sig-field-label">Date</div>
         </div>
@@ -1095,7 +1095,7 @@ p { margin-bottom: 8pt; }
           <div class="sig-field-line"></div>
           <div class="sig-field-label">Printed Name</div>
         </div>
-        <div class="sig-field narrow">
+        <div class="sig-field narrow" data-sig-role="date">
           <div class="sig-field-line"></div>
           <div class="sig-field-label">Date</div>
         </div>
@@ -1171,11 +1171,11 @@ p { margin-bottom: 8pt; }
   <div class="sig-block">
     <div class="sig-row">
       <div class="sig-field" style="flex:2;" data-sig-role="customer"><div class="sig-field-line"></div><div class="sig-field-label">Owner Acknowledgment</div></div>
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
     </div>
     <div class="sig-row">
       <div class="sig-field" style="flex:2;" data-sig-role="customer-joint"><div class="sig-field-line"></div><div class="sig-field-label">Owner Acknowledgment (if joint)</div></div>
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
     </div>
   </div>
 </section>
@@ -1196,11 +1196,11 @@ p { margin-bottom: 8pt; }
   <div class="sig-block" style="margin-top:30pt;">
     <div class="sig-row">
       <div class="sig-field" style="flex:2;" data-sig-role="customer"><div class="sig-field-line"></div><div class="sig-field-label">Owner Signature</div></div>
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
     </div>
     <div class="sig-row">
       <div class="sig-field" style="flex:2;" data-sig-role="customer-joint"><div class="sig-field-line"></div><div class="sig-field-label">Owner Signature (if joint)</div></div>
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
     </div>
   </div>
 </section>
@@ -1260,15 +1260,15 @@ p { margin-bottom: 8pt; }
   <div class="sig-block" style="margin-top:30pt;">
     <div class="sig-row">
       <div class="sig-field" style="flex:2;" data-sig-role="customer"><div class="sig-field-line"></div><div class="sig-field-label">Owner Signature</div></div>
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
     </div>
     <div class="sig-row">
       <div class="sig-field" style="flex:2;" data-sig-role="customer-joint"><div class="sig-field-line"></div><div class="sig-field-label">Owner Signature (if joint)</div></div>
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
     </div>
     <div class="sig-row">
       <div class="sig-field" style="flex:2;" data-sig-role="contractor"><div class="sig-field-line"></div><div class="sig-field-label">Contractor Signature</div></div>
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
     </div>
   </div>
 </section>
@@ -1295,12 +1295,12 @@ p { margin-bottom: 8pt; }
 
   <div class="sig-block" style="margin-top:18pt;">
     <div class="sig-row">
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
       <div class="sig-field" style="flex:2;" data-sig-role="customer"><div class="sig-field-line"></div><div class="sig-field-label">Customer Signature</div></div>
     </div>
     <div class="sig-row">
       <div class="sig-field" style="flex:2;" data-sig-role="contractor"><div class="sig-field-line"></div><div class="sig-field-label">Residential Contractor Signature</div></div>
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
     </div>
   </div>
 
@@ -1314,11 +1314,11 @@ p { margin-bottom: 8pt; }
   <div class="sig-block" style="margin-top:18pt;">
     <div class="sig-row">
       <div class="sig-field" style="flex:2;" data-sig-role="customer"><div class="sig-field-line"></div><div class="sig-field-label">Owner Signature</div></div>
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
     </div>
     <div class="sig-row">
       <div class="sig-field" style="flex:2;" data-sig-role="contractor"><div class="sig-field-line"></div><div class="sig-field-label">Contractor Signature</div></div>
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
     </div>
   </div>
 </section>
@@ -1376,7 +1376,7 @@ p { margin-bottom: 8pt; }
   <div class="sig-block" style="margin-top:30pt;">
     <div class="sig-row">
       <div class="sig-field" style="flex:2;" data-sig-role="customer-guarantor"><div class="sig-field-line"></div><div class="sig-field-label">Guarantor Signature</div></div>
-      <div class="sig-field narrow"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
+      <div class="sig-field narrow" data-sig-role="date"><div class="sig-field-line"></div><div class="sig-field-label">Date</div></div>
     </div>
     <div class="sig-row">
       <div class="sig-field" style="flex:3;"><div class="sig-field-line"></div><div class="sig-field-label">Printed Name</div></div>

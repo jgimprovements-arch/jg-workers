@@ -331,6 +331,25 @@ export default {
             }
           };
 
+          const stampDate = (el, signedAt) => {
+            // Insert the signed date as text sitting on the underline. Used
+            // for [data-sig-role="date"] anchors which sit next to a signature
+            // anchor in every sig-row. signed_at is the same human-readable
+            // date used in stampSig (e.g., "May 26, 2026"), so all date fields
+            // across the contract show one consistent date.
+            const line = el.querySelector('.sig-field-line');
+            if (!line || !signedAt) return;
+            const dateText = document.createElement('div');
+            dateText.textContent = signedAt;
+            dateText.style.fontFamily = "'Helvetica Neue', sans-serif";
+            dateText.style.fontSize = '10pt';
+            dateText.style.fontWeight = '600';
+            dateText.style.color = '#0d2d5e';  // navy, matches contract palette
+            dateText.style.paddingBottom = '2pt';
+            dateText.style.textAlign = 'left';
+            line.parentNode.insertBefore(dateText, line);
+          };
+
           const anchors = document.querySelectorAll('[data-sig-role]');
           for (const el of anchors) {
             const role = el.getAttribute('data-sig-role');
@@ -350,6 +369,9 @@ export default {
                 if (sigs.guarantor_sig_data_url) {
                   stampSig(el, sigs.guarantor_sig_data_url, sigs.guarantor_name, sigs.signed_at);
                 }
+                break;
+              case 'date':
+                stampDate(el, sigs.signed_at);
                 break;
               case 'leave-blank':
                 // Intentional no-op. Cancellation/optional forms stay blank.
