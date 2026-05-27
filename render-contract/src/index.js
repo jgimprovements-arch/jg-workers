@@ -12,6 +12,7 @@
 import puppeteer from '@cloudflare/puppeteer';
 import { CONTRACT_TEMPLATE_HTML } from './template.js';
 import { CO_TEMPLATE_HTML } from './co-template.js';
+import { renderDrawRequestHTML } from './draw-request-template.js';
 
 // ─── CORS (inlined) ──────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
@@ -119,8 +120,66 @@ export default {
       return jsonResponse(request, { ok: false, error: 'Invalid JSON body' }, 400);
     }
 
-    const { packet_id, project_id, fields, draws, xact_items, signatures, type, co_fields, co_items } = body || {};
-    const renderType = type || 'contract';  // 'contract' (default) or 'change_order'
+    const { packet_id, project_id, fields, draws, xact_items, signatures, type, co_fields, co_items, draw_payload } = body || {};
+    const renderType = type || 'contract';  // 'contract' (default) or 'change_order' or 'draw_request'
+
+    // ═════════════════════════════════════════════════════════════════════
+    // Draw Request — short-circuit path
+    // ═════════════════════════════════════════════════════════════════════
+    // Draws don't use the contract template or its field-injection. We pass
+    // a fully-rendered HTML string from draw-request-template.js to Chrome,
+    // print to PDF, upload, return URL — same upload helper as contracts.
+    //
+    // Required body fields for draw_request:
+    //   type: 'draw_request'
+    //   project_id: UUID
+    //   draw_payload: { draw, sov, project, all_draws }  ← see draw-request-template.js
+    //
+    // No signatures injection (bank/lender + homeowner sign on paper).
+    if (renderType === 'draw_request') {
+      if (!project_id) {
+        return jsonResponse(request, { ok: false, error: 'project_id required' }, 400);
+      }
+      if (!draw_payload || typeof draw_payload !== 'object' || !draw_payload.draw) {
+        return jsonResponse(request, { ok: false, error: 'draw_payload with draw object required' }, 400);
+      }
+      if (!env.BROWSER) {
+        return jsonResponse(request, { ok: false, error: 'BROWSER binding not configured' }, 500);
+      }
+      if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+        return jsonResponse(request, { ok: false, error: 'Supabase env vars missing' }, 500);
+      }
+
+      let drawBrowser;
+      try {
+        const html = renderDrawRequestHTML(draw_payload);
+        drawBrowser = await puppeteer.launch(env.BROWSER);
+        const drawPage = await drawBrowser.newPage();
+        await drawPage.setContent(html, { waitUntil: 'load' });
+        const drawPdf = await drawPage.pdf({
+          format: 'Letter',
+          printBackground: true,
+          preferCSSPageSize: true,
+        });
+        const drawNum = draw_payload.draw.draw_num || 'x';
+        const ts = Date.now();
+        const storagePath = `projects/${project_id}/draws/draw-${drawNum}-${ts}-request.pdf`;
+        const draw_pdf_url = await uploadPdfToStorage(env, storagePath, drawPdf);
+        return jsonResponse(request, {
+          ok: true,
+          draw_pdf_url,
+          byte_size: drawPdf.byteLength,
+        });
+      } catch (err) {
+        console.error('render-draw-request error:', err.stack || err.message || err);
+        return jsonResponse(request, { ok: false, error: err.message || String(err) }, 500);
+      } finally {
+        if (drawBrowser) {
+          try { await drawBrowser.close(); } catch (_) { /* ignore */ }
+        }
+      }
+    }
+    // ═════════════════════════════════════════════════════════════════════
 
     if (!packet_id || !project_id) {
       return jsonResponse(request, { ok: false, error: 'packet_id and project_id required' }, 400);
