@@ -155,7 +155,10 @@ export default {
         const html = renderDrawRequestHTML(draw_payload);
         drawBrowser = await puppeteer.launch(env.BROWSER);
         const drawPage = await drawBrowser.newPage();
-        await drawPage.setContent(html, { waitUntil: 'load' });
+        // networkidle0 waits for the logo image fetch from GitHub Pages to
+        // finish before we capture the PDF — without it the logo box renders
+        // empty.
+        await drawPage.setContent(html, { waitUntil: 'networkidle0' });
         const drawPdf = await drawPage.pdf({
           format: 'Letter',
           printBackground: true,

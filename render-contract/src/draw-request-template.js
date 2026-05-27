@@ -100,11 +100,14 @@ export function renderDrawRequestHTML(payload) {
 <body>
 
   <div class="header">
-    <div>
-      <div class="logo-block">JG RESTORATION</div>
-      <div class="logo-sub">
-        1720 N Silverspring Dr, Appleton, WI · 2230 Church St, Stevens Point, WI<br>
-        (920) 428-4200 · jg-restoration.com
+    <div style="display:flex;align-items:center;gap:14px;">
+      <img src="https://jgimprovements-arch.github.io/jg-dispatch/logo.png" alt="JG" style="width:64px;height:64px;object-fit:contain;">
+      <div>
+        <div class="logo-block">JG RESTORATION</div>
+        <div class="logo-sub">
+          1720 N Silverspring Dr, Appleton, WI · 2230 Church St, Stevens Point, WI<br>
+          (920) 428-4200 · jg-restoration.com
+        </div>
       </div>
     </div>
     <div class="doc-title">
@@ -174,32 +177,6 @@ export function renderDrawRequestHTML(payload) {
       ${drawRowsHtml}
     </tbody>
   </table>
-
-  <div class="instructions">
-    <h3>Instructions for Bank / Lender</h3>
-    <ol>
-      <li>This Progress Draw Request authorizes disbursement of the amount shown above.</li>
-      <li>The trigger milestone for this draw has been completed by JG Restoration.</li>
-      <li>The borrower (homeowner) signs below to authorize this draw release.</li>
-      <li>Funds are payable to <b>JJ Greil Enterprises LLC dba JG Restoration</b>.</li>
-      <li>Return the signed form to the borrower so they can upload it back to JG Restoration via the project portal.</li>
-    </ol>
-  </div>
-
-  <div class="signature-grid">
-    <div class="sig-block">
-      <div class="sig-label">Borrower / Homeowner</div>
-      <div>Signature: __________________________________</div>
-      <div style="margin-top:14px;">Print Name: ${esc(project.customer_name || '')}</div>
-      <div style="margin-top:14px;">Date: __________________________</div>
-    </div>
-    <div class="sig-block">
-      <div class="sig-label">Bank / Lender Authorized Signer</div>
-      <div>Signature: __________________________________</div>
-      <div style="margin-top:14px;">Print Name: __________________________</div>
-      <div style="margin-top:14px;">Date: __________________________</div>
-    </div>
-  </div>
 
   <div class="footer">
     JJ Greil Enterprises LLC dba JG Restoration · Fire · Water · Mold · Reconstruction<br>
